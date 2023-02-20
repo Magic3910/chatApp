@@ -13,8 +13,22 @@ const Workspace = require("../models/workspace");
 const Channel = require("../models/channel");
 const ChannelChat = require("../models/channelChat");
 const DM = require("../models/dm");
+const { OpenAIApi, Configuration } = require('openai');
 
 const router = express.Router();
+
+router.get("/util/badword", async (req,res,next) => {
+  const configuration = new Configuration({
+    apiKey: "secret",
+  });
+  const openai = new OpenAIApi(configuration);
+
+  const completion = await openai.createCompletion({
+    model: "text-davinci-003",
+    prompt: `${req.query.text} 이 문장이 욕설이거나 모욕을 줄 수 있다고 판단하면 1을 아니라면 2를 출력해\\n`,
+  });
+  return res.json({"status":"ok","result":Number(completion.data.choices[0].text)})
+})
 
 router.get("/workspaces", isLoggedIn, async (req, res, next) => {
   try {
@@ -632,6 +646,8 @@ router.delete(
     }
   }
 );
+
+
 
 router.get(
   "/workspaces/:workspace/channels/:channel/members",
